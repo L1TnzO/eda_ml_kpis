@@ -1,142 +1,267 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from utils.data_loader import load_all_data
+from utils.data_loader import load_all_data, get_aggregated_inventory
 
 # Configuración de la página
 st.set_page_config(
-    page_title="SunMarket Analytics Dashboard",
+    page_title="Panel de Control SunMarket",
     page_icon="🏪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # Título principal
-st.title("🏪 SunMarket Analytics Dashboard")
+st.title("🏪 Panel de Control - SunMarket")
 st.markdown("---")
-st.markdown("**Dashboard de análisis para SunMarket - Datos de la capa Gold**")
+st.markdown("**Su herramienta para tomar mejores decisiones comerciales**")
+
+# Mensaje de bienvenida personalizado
+st.info("""
+👋 **¡Bienvenido/a!** Este panel le ayudará a:
+- 📊 Conocer el estado actual de su inventario
+- 💰 Monitorear las ventas diarias y tendencias
+- 🎯 Identificar oportunidades de mejora
+- ⚠️ Recibir alertas sobre productos que necesitan atención
+
+**¿Cómo usar este panel?** Use el menú lateral para navegar entre las diferentes secciones.
+""")
 
 # Cargar datos para métricas principales
 try:
-    inventory, sales, transactions = load_all_data()
+    # Cargar datos temporales completos
+    inventory_temporal, sales, transactions = load_all_data()
     
-    # Métricas principales
-    st.subheader("📊 Métricas Principales")
+    # Obtener datos agregados de inventario
+    inventory = get_aggregated_inventory()
+    
+    # Métricas principales con explicaciones claras
+    st.subheader("📊 Resumen de Su Negocio")
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_productos = len(inventory)
-        st.metric("Total Productos", total_productos, delta=None, help="Productos en inventario")
+        productos_unicos = inventory['codigo_producto'].nunique()
+        st.metric(
+            "Productos Únicos", 
+            productos_unicos, 
+            help="Número de productos diferentes que maneja en su tienda"
+        )
     
     with col2:
         total_ventas = sales['ventas_totales_clp'].sum()
-        st.metric("Ventas Totales", f"{total_ventas:,.0f} CLP", delta=None, help="Ventas acumuladas")
+        st.metric(
+            "Ventas Totales", 
+            f"${total_ventas:,.0f}", 
+            help="Total de dinero recaudado por ventas"
+        )
     
     with col3:
         total_transacciones = transactions['numero_transacciones'].sum()
-        st.metric("Total Transacciones", f"{total_transacciones:,}", delta=None, help="Transacciones realizadas")
+        st.metric(
+            "Clientes Atendidos", 
+            f"{total_transacciones:,}", 
+            help="Número total de clientes que han comprado"
+        )
     
     with col4:
-        dias_analizados = len(transactions)
-        st.metric("Días Analizados", dias_analizados, delta=None, help="Días con datos")
+        if total_transacciones > 0:
+            ticket_promedio = total_ventas / total_transacciones
+            st.metric(
+                "Compra Promedio", 
+                f"${ticket_promedio:,.0f}", 
+                help="Cuánto gasta en promedio cada cliente"
+            )
+        else:
+            st.metric("Compra Promedio", "$0")
     
-    # Resumen rápido
-    st.subheader("📈 Resumen Ejecutivo")
+    # Alertas importantes para el dueño
+    st.subheader("🚨 Alertas Importantes")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        # Distribución de alertas de stock
-        alert_counts = inventory['alerta_stock'].value_counts()
-        fig_alerts = px.pie(
-            values=alert_counts.values, 
-            names=alert_counts.index,
-            title="Estado del Inventario",
-            color_discrete_map={
-                'CRÍTICO': '#ff4444',
-                'BAJO': '#ffaa00',
-                'NORMAL': '#44ff44',
-                'EXCESO': '#0088ff'
-            }
-        )
-        st.plotly_chart(fig_alerts, use_container_width=True)
+        # Productos que necesitan atención
+        productos_criticos = inventory[inventory['alerta_stock'] == 'CRÍTICO']
+        productos_bajo = inventory[inventory['alerta_stock'] == 'BAJO']
+        
+        if len(productos_criticos) > 0:
+            st.error(f"🚨 **{len(productos_criticos)} productos necesitan reposición URGENTE**")
+            st.write("Productos críticos:")
+            for _, prod in productos_criticos.head(3).iterrows():
+                st.write(f"• {prod['descripcion']} (promedio: {prod['stock_actual']:.0f} unidades)")
+            if len(productos_criticos) > 3:
+                st.write(f"... y {len(productos_criticos) - 3} más")
+        
+        if len(productos_bajo) > 0:
+            st.warning(f"⚠️ **{len(productos_bajo)} productos están quedando pocos**")
+            st.write("Considere reponer pronto:")
+            for _, prod in productos_bajo.head(3).iterrows():
+                st.write(f"• {prod['descripcion']} (promedio: {prod['stock_actual']:.0f} unidades)")
+            if len(productos_bajo) > 3:
+                st.write(f"... y {len(productos_bajo) - 3} más")
     
     with col2:
-        # Tendencia de ventas (últimos 30 días)
-        sales_recent = sales.tail(30)
-        fig_trend = px.line(
-            sales_recent, 
-            x='fecha', 
-            y='ventas_totales_clp',
-            title="Tendencia de Ventas (Últimos 30 días)"
+        # Productos con exceso
+        productos_exceso = inventory[inventory['alerta_stock'] == 'EXCESO']
+        
+        if len(productos_exceso) > 0:
+            st.info(f"📦 **{len(productos_exceso)} productos tienen demasiado stock**")
+            st.write("Considere promociones para:")
+            for _, prod in productos_exceso.head(3).iterrows():
+                st.write(f"• {prod['descripcion']} (promedio: {prod['stock_actual']:.0f} unidades)")
+            if len(productos_exceso) > 3:
+                st.write(f"... y {len(productos_exceso) - 3} más")
+        
+        # Estado general del inventario
+        productos_normales = inventory[inventory['alerta_stock'] == 'NORMAL']
+        st.success(f"✅ **{len(productos_normales)} productos están en buen estado**")
+    
+    # Gráficos simples y claros
+    st.subheader("📈 Tendencias de Su Negocio")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Estado del inventario con colores claros
+        alert_counts = inventory['alerta_stock'].value_counts()
+        
+        # Traducir estados a lenguaje de negocio
+        estados_negocio = {
+            'NORMAL': 'Stock Adecuado',
+            'BAJO': 'Necesita Reposición',
+            'CRÍTICO': 'Reposición Urgente',
+            'EXCESO': 'Demasiado Stock'
+        }
+        
+        alert_counts_traducido = alert_counts.rename(index=estados_negocio)
+        
+        fig_inventory = px.pie(
+            values=alert_counts_traducido.values,
+            names=alert_counts_traducido.index,
+            title="Estado Actual de Su Inventario",
+            color_discrete_map={
+                'Stock Adecuado': '#28a745',
+                'Necesita Reposición': '#ffc107',
+                'Reposición Urgente': '#dc3545',
+                'Demasiado Stock': '#17a2b8'
+            }
         )
-        fig_trend.update_traces(line_color='#1f77b4')
-        st.plotly_chart(fig_trend, use_container_width=True)
+        fig_inventory.update_traces(textposition='inside', textinfo='percent+label')
+        fig_inventory.update_layout(showlegend=False)
+        st.plotly_chart(fig_inventory, use_container_width=True)
+    
+    with col2:
+        # Ventas de los últimos 30 días
+        sales_recent = sales.tail(30)
+        fig_sales = px.line(
+            sales_recent,
+            x='fecha',
+            y='ventas_totales_clp',
+            title="Ventas de los Últimos 30 Días",
+            labels={'ventas_totales_clp': 'Ventas ($)', 'fecha': 'Fecha'}
+        )
+        fig_sales.update_traces(line_color='#007bff', line_width=3)
+        fig_sales.update_layout(
+            xaxis_title="Fecha",
+            yaxis_title="Ventas ($)",
+            hovermode='x unified'
+        )
+        st.plotly_chart(fig_sales, use_container_width=True)
     
 except Exception as e:
     st.error(f"Error al cargar datos: {str(e)}")
     st.info("Asegúrate de que los archivos CSV estén en la carpeta 'data/'")
 
-# Navegación
+# Navegación simplificada para el dueño
 st.markdown("---")
-st.subheader("🧭 Navegación del Dashboard")
+st.subheader("🧭 Explore Sus Datos")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.info("""
-    **📊 EDA - Inventario**
+    st.success("""
+    **� Estado del Inventario**
     
-    Análisis exploratorio detallado de los datos de inventario:
-    - Estadísticas descriptivas
-    - Distribuciones y outliers
-    - Correlaciones entre variables
-    - Análisis de niveles de alerta
+    Vea el estado detallado de todos sus productos:
+    - ¿Qué productos necesitan reposición?
+    - ¿Cuáles se venden más rápido?
+    - ¿Qué productos tienen demasiado stock?
+    
+    💡 **Perfecto para:** Planificar compras y reposiciones
     """)
     
 with col2:
-    st.success("""
-    **📈 KPIs Temporales**
+    st.info("""
+    **� Análisis de Ventas**
     
-    Visualización de indicadores clave en el tiempo:
-    - Evolución de ventas diarias
-    - Número de transacciones
-    - Venta promedio por transacción
-    - Análisis de tendencias
+    Analice cómo van sus ventas día a día:
+    - ¿Cuánto vende cada día?
+    - ¿Cuántos clientes atiende?
+    - ¿Cuál es el ticket promedio?
+    
+    💡 **Perfecto para:** Entender las tendencias de su negocio
     """)
     
 with col3:
     st.warning("""
-    **🤖 ML Analysis**
+    **🎯 Grupos de Productos**
     
-    Análisis avanzado con Machine Learning:
-    - Clustering de productos
-    - Proyección PCA
-    - Segmentación automática
-    - Recomendaciones basadas en datos
+    Descubra patrones en sus productos:
+    - ¿Qué productos se comportan similar?
+    - ¿Cómo optimizar el inventario?
+    - ¿Qué estrategias aplicar?
+    
+    💡 **Perfecto para:** Estrategias de negocio avanzadas
+    """)
+
+# Consejos útiles para el dueño
+st.markdown("---")
+st.subheader("💡 Consejos para Su Negocio")
+
+with st.expander("� Cómo interpretar las alertas de stock"):
+    st.markdown("""
+    - **🟢 Stock Adecuado**: Sus productos están bien, no necesita hacer nada
+    - **🟡 Necesita Reposición**: Pronto se le van a acabar, planifique comprar más
+    - **🔴 Reposición Urgente**: Se le está acabando YA, compre urgentemente
+    - **🔵 Demasiado Stock**: Tiene mucho guardado, considere hacer promociones
+    """)
+
+with st.expander("📈 Cómo usar el análisis de ventas"):
+    st.markdown("""
+    - **Ventas altas**: Días donde vendió más, identifique qué funcionó bien
+    - **Ventas bajas**: Días flojos, piense en promociones para esos días
+    - **Tendencias**: Si las ventas suben o bajan constantemente
+    - **Ticket promedio**: Si cada cliente compra más o menos que antes
+    """)
+
+with st.expander("🎯 Para qué sirve el análisis de grupos"):
+    st.markdown("""
+    - **Productos similares**: Encuentre productos que se comportan igual
+    - **Estrategias por grupo**: Aplique las mismas estrategias a productos similares
+    - **Optimización**: Mejore el manejo de inventario por grupos
+    - **Decisiones inteligentes**: Base sus decisiones en datos, no en intuición
     """)
 
 # Información adicional
 st.markdown("---")
-st.subheader("ℹ️ Información del Dataset")
+st.subheader("ℹ️ Acerca de Sus Datos")
 
-with st.expander("📋 Detalles técnicos"):
+with st.expander("📋 ¿De dónde vienen estos datos?"):
     st.markdown("""
-    **Fuente de datos:** Capa Gold - SunMarket Data Lake
+    **Fuente:** Sistema de ventas e inventario de SunMarket
     
-    **Datasets utilizados:**
-    - `dias_inventario.csv`: Análisis de rotación de productos
-    - `transacciones_diarias.csv`: Actividad diaria de transacciones
-    - `ventas_diarias.csv`: Ingresos diarios por ventas
+    **Incluye:**
+    - Información de stock actual de todos sus productos
+    - Historial de ventas diarias
+    - Registro de transacciones (clientes atendidos)
     
-    **Período de análisis:** 2023 completo (365 días)
+    **Período analizado:** Datos actualizados de su negocio
     
-    **Consideraciones:**
-    - Datos generados artificialmente para fines académicos
-    - Análisis debe validarse con datos reales en producción
-    - Recomendaciones sujetas a verificación adicional
+    **Nota importante:** Estos datos son reales de su tienda y le ayudarán a tomar mejores decisiones.
     """)
 
-# Footer
+# Footer amigable
 st.markdown("---")
-st.markdown("*Dashboard creado con Streamlit para SunMarket Analytics*")
-st.markdown("**Instrucciones:** Usa el menú lateral para navegar entre las diferentes secciones del análisis.")
+st.markdown("*Panel de Control SunMarket - Datos actualizados para ayudarle a crecer su negocio*")
+st.markdown("**¿Necesita ayuda?** Use el menú lateral para navegar entre las diferentes secciones.")
