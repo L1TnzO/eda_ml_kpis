@@ -502,7 +502,32 @@ try:
         st.markdown("• Usar análisis ML para insights avanzados")
     
     # Llamada a la acción
-    st.info("🔗 **Próximo paso:** Vaya a la página 'Análisis de Productos' para ver cómo la inteligencia artificial puede ayudarle a optimizar su inventario")
+    st.info("🔗 **Próximo paso:** Vaya a la página 'Análisis de Productos' para ver cómo el Machine Learning puede ayudarle a optimizar su inventario usando clustering")
+
+    # Limitaciones y consideraciones éticas específicas del EDA
+    st.markdown("---")
+    st.subheader("⚠️ Limitaciones del Análisis Exploratorio")
+    
+    with st.expander("📊 Consideraciones Importantes sobre este Análisis"):
+        st.markdown("""
+        **Limitaciones Técnicas:**
+        - Los promedios pueden ocultar variaciones importantes en el tiempo
+        - Los datos reflejan un período específico y pueden no representar tendencias futuras
+        - Las alertas de stock están basadas en umbrales generales, no en patrones específicos de cada producto
+        - La correlación no implica causalidad entre variables
+        
+        **Consideraciones Éticas:**
+        - Este análisis se basa en datos comerciales agregados sin información personal
+        - Las recomendaciones son sugerencias basadas en datos históricos
+        - Los algoritmos pueden tener sesgos inherentes en la clasificación de productos
+        - Se recomienda validar las conclusiones con experiencia comercial práctica
+        
+        **Recomendaciones de Uso:**
+        - Use este análisis como complemento, no como única fuente de decisiones
+        - Considere factores externos no capturados (estacionalidad, eventos especiales, etc.)
+        - Revise y actualice los umbrales de alerta según la experiencia del negocio
+        - Valide las tendencias con datos más recientes cuando estén disponibles
+        """)
 
     # ...existing code...
 

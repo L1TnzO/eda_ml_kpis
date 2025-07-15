@@ -377,6 +377,32 @@ try:
         else:
             st.warning(f"⚠️ **Relación Débil:** Gasto individual no afecta mucho las ventas totales ({correlacion_ventas_gasto:.2f})")
 
+    # Limitaciones y consideraciones éticas específicas de KPIs
+    st.markdown("---")
+    st.subheader("⚠️ Limitaciones del Análisis de KPIs")
+    
+    with st.expander("📊 Consideraciones Importantes sobre los Indicadores"):
+        st.markdown("""
+        **Limitaciones Técnicas:**
+        - Los KPIs reflejan tendencias pasadas que pueden no repetirse en el futuro
+        - Los promedios pueden ocultar variabilidad significativa entre períodos
+        - Las correlaciones no implican causalidad entre variables
+        - Los datos pueden estar influenciados por factores externos no capturados
+        
+        **Consideraciones Éticas:**
+        - Los análisis se basan en datos comerciales agregados sin información personal de clientes
+        - Las tendencias mostradas son descriptivas, no predictivas
+        - Los algoritmos pueden tener sesgos en la interpretación de patrones
+        - Se preserva la confidencialidad de la información comercial sensible
+        
+        **Recomendaciones de Uso:**
+        - Use estos KPIs como indicadores, no como certezas absolutas
+        - Considere factores estacionales, eventos especiales y contexto económico
+        - Valide las tendencias con conocimiento del negocio y experiencia práctica
+        - Actualice regularmente los análisis con datos más recientes
+        - Combine estos insights con otros indicadores cualitativos del negocio
+        """)
+
 except Exception as e:
     st.error(f"❌ Error al cargar o procesar los datos: {str(e)}")
     st.info("Asegúrate de que los archivos estén en la carpeta 'data/'")

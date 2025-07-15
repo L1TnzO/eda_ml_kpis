@@ -205,9 +205,9 @@ with col2:
     
 with col3:
     st.warning("""
-    **🎯 Grupos de Productos**
+    **🎯 Análisis de Productos**
     
-    Descubra patrones en sus productos:
+    Descubra patrones en sus productos usando Machine Learning:
     - ¿Qué productos se comportan similar?
     - ¿Cómo optimizar el inventario?
     - ¿Qué estrategias aplicar?
@@ -235,12 +235,12 @@ with st.expander("📈 Cómo usar el análisis de ventas"):
     - **Ticket promedio**: Si cada cliente compra más o menos que antes
     """)
 
-with st.expander("🎯 Para qué sirve el análisis de grupos"):
+with st.expander("🎯 Para qué sirve el análisis de Machine Learning"):
     st.markdown("""
-    - **Productos similares**: Encuentre productos que se comportan igual
+    - **Productos similares**: Encuentre productos que se comportan igual usando clustering
     - **Estrategias por grupo**: Aplique las mismas estrategias a productos similares
     - **Optimización**: Mejore el manejo de inventario por grupos
-    - **Decisiones inteligentes**: Base sus decisiones en datos, no en intuición
+    - **Decisiones basadas en datos**: Base sus decisiones en análisis, no solo en intuición
     """)
 
 # Información adicional
@@ -259,6 +259,33 @@ with st.expander("📋 ¿De dónde vienen estos datos?"):
     **Período analizado:** Datos actualizados de su negocio
     
     **Nota importante:** Estos datos son reales de su tienda y le ayudarán a tomar mejores decisiones.
+    """)
+
+with st.expander("⚠️ Limitaciones y Consideraciones Éticas"):
+    st.markdown("""
+    **📊 Limitaciones del Análisis:**
+    - Los datos reflejan patrones históricos que pueden no repetirse en el futuro
+    - Los algoritmos de agrupación son aproximaciones y deben validarse con experiencia comercial
+    - Las predicciones son estimaciones basadas en tendencias pasadas
+    - Los datos pueden contener errores de registro o medición
+    
+    **🔒 Consideraciones Éticas y Privacidad:**
+    - Se preserva la confidencialidad de la información comercial
+    - No se exponen datos personales de clientes individuales
+    - Los análisis se basan en datos agregados y anonimizados
+    - El uso de estos datos debe cumplir con regulaciones locales de protección de datos
+    
+    **⚖️ Recomendaciones de Uso Responsable:**
+    - Use estos análisis como apoyo, no como única fuente de decisiones
+    - Valide las recomendaciones con su experiencia comercial
+    - Considere factores externos no capturados en los datos (temporadas, eventos, etc.)
+    - Revise y actualice regularmente las interpretaciones basadas en nuevos datos
+    
+    **🎯 Transparencia del Modelo:**
+    - Clustering K-means: Agrupa productos con características similares
+    - PCA: Reduce dimensionalidad para visualización, puede perder información
+    - Las métricas son calculadas en base a promedios históricos
+    - Los umbrales de alertas son configurables y pueden ajustarse según necesidades
     """)
 
 # Footer amigable
